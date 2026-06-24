@@ -1,0 +1,21 @@
+From 252aa79fdbd4ac2da09d9b98f81bf11f5e3e1870 Mon Sep 17 00:00:00 2001
+From: Bastian Blank <waldi@debian.org>
+Date: Tue, 4 Aug 2020 09:44:19 +0000
+Subject: [PATCH 1/2] Documentation: Drop sphinx version check
+Forwarded: not-needed
+
+---
+ Documentation/Makefile | 6 ------
+ 1 file changed, 6 deletions(-)
+
+--- a/Documentation/Makefile
++++ b/Documentation/Makefile
+@@ -54,8 +54,6 @@
+ 
+ # Common documentation targets
+ htmldocs mandocs infodocs texinfodocs latexdocs epubdocs xmldocs pdfdocs linkcheckdocs:
+-	$(Q)PYTHONPYCACHEPREFIX="$(PYTHONPYCACHEPREFIX)" \
+-		$(srctree)/tools/docs/sphinx-pre-install --version-check
+ 	+$(Q)PYTHONPYCACHEPREFIX="$(PYTHONPYCACHEPREFIX)" \
+ 		$(PYTHON3) $(BUILD_WRAPPER) $@ \
+ 		--sphinxdirs="$(SPHINXDIRS)" $(RUSTDOC) \

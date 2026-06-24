@@ -1,0 +1,9 @@
+work/
+output/
+*.tar.xz
+*.tar.gz
+*.deb
+*.dsc
+*.buildinfo
+*.changes
+QWEN.md
