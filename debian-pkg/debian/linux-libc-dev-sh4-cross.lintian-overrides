@@ -1,2 +1,0 @@
-# The -cross packages use the sysroot layout
-linux-libc-dev-sh4-cross: non-standard-dir-in-usr [usr/sh4-linux-gnu]

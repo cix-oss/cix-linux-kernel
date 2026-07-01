@@ -20,6 +20,9 @@ OUTPUT_DIR="${OUTPUT_DIR:-${PWD}/output}"
 PATCH_REMOTE="${PATCH_REMOTE:-https://github.com/cixtech/cix-linux-main.git}"
 PATCH_BRANCH="${PATCH_BRANCH:-main}"
 
+SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
+FIXUPS_SCRIPT="${SCRIPT_DIR}/patch-fixups/apply-patch-fixups.sh"
+
 KERNEL_TARBALL_URL="${KERNEL_TARBALL_URL:-https://cdn.kernel.org/pub/linux/kernel/v${KERNEL_SERIES%%.*}.x/linux-${KERNEL_VERSION}.tar.xz}"
 
 KERNEL_TARBALL="${WORK_DIR}/linux-${KERNEL_VERSION}.tar.xz"
@@ -66,6 +69,10 @@ prepare_patch_repo() {
 
     [[ -d "${PATCHSET_DIR}" ]] || { echo "Patch set not found for series ${KERNEL_SERIES}: ${PATCHSET_DIR}" >&2; exit 1; }
     [[ -f "${DEFCONFIG}" ]] || { echo "defconfig not found: ${DEFCONFIG}" >&2; exit 1; }
+
+    if [[ -x "${FIXUPS_SCRIPT}" ]]; then
+        "${FIXUPS_SCRIPT}" "${PATCH_DIR}" "${KERNEL_SERIES}"
+    fi
 }
 
 apply_patches() {

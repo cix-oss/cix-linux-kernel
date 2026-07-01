@@ -1,0 +1,26 @@
+From: CIX OSS <oss@cixtech.com>
+Subject: Fix linlon-dp Makefile include path for out-of-tree builds
+
+The linlon-dp Makefile uses `ccflags-y := -I $(srctree)/$(src)/include`.
+In Debian's kernel build system, both `$(srctree)` and `$(src)` resolve
+to absolute paths, causing the include path to be duplicated:
+
+  -I /build/package/package//build/package/package/drivers/gpu/drm/cix/linlon-dp/include
+
+This results in `linlondp_drm.h: No such file or directory` because the
+doubled path doesn't exist. Use `$(src)` alone, which resolves correctly
+in both in-tree (native) and out-of-tree (Debian package) builds.
+
+--- a/drivers/gpu/drm/cix/linlon-dp/Makefile
++++ b/drivers/gpu/drm/cix/linlon-dp/Makefile
+@@ -1,8 +1,8 @@
+ # SPDX-License-Identifier: GPL-2.0
+ 
+ ccflags-y := \
+-    -I $(srctree)/$(src)/include \
+-    -I $(srctree)/$(src)
++    -I $(src)/include \
++    -I $(src)
+ 
+ linlon-dp-y := \
+     linlondp_drv.o \

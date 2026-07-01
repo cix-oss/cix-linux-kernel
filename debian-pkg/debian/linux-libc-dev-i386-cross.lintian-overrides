@@ -1,2 +1,0 @@
-# The -cross packages use the sysroot layout
-linux-libc-dev-i386-cross: non-standard-dir-in-usr [usr/i386-linux-gnu]

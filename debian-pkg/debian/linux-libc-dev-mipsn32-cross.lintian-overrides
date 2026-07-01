@@ -1,2 +1,0 @@
-# The -cross packages use the sysroot layout
-linux-libc-dev-mipsn32-cross: non-standard-dir-in-usr [usr/mips64-linux-gnuabin32]

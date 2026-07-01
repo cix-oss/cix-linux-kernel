@@ -23,6 +23,8 @@ debian_dir="${SCRIPT_DIR}/debian"
 [[ -d "${debian_dir}" ]] || { echo "debian/ directory not found at ${debian_dir}" >&2; exit 1; }
 
 upstream_version="$(dpkg-parsechangelog -l "${debian_dir}/changelog" --show-field Version | sed -E 's/-[^-]+$//')"
+full_version="$(dpkg-parsechangelog -l "${debian_dir}/changelog" --show-field Version)"
+distribution="$(dpkg-parsechangelog -l "${debian_dir}/changelog" --show-field Distribution)"
 series="${upstream_version%.*}"
 package_name="$(dpkg-parsechangelog -l "${debian_dir}/changelog" --show-field Source)"
 
@@ -89,6 +91,53 @@ stage_cix_patches() {
         printf 'cix/%s\n' "$(basename "$p")" >> "${series_file}"
     done
     echo "Appended $(ls "${dst}" | wc -l) CIX patches to debian/patches/series"
+
+    # Local follow-up patches that fix bugs in the upstream CIX patch set.
+    # Tracked in debian/patches/cix-fixups/ and applied after cix/*.
+    local fixups_dir="${src_tree}/debian/patches/cix-fixups"
+    if [[ -d "${fixups_dir}" ]] && compgen -G "${fixups_dir}/*.patch" >/dev/null; then
+        if ! grep -q '^# CIX fixups$' "${series_file}"; then
+            {
+                echo ""
+                echo "# CIX fixups"
+            } >> "${series_file}"
+        fi
+        for p in "${fixups_dir}"/*.patch; do
+            printf 'cix-fixups/%s\n' "$(basename "$p")" >> "${series_file}"
+        done
+        echo "Appended $(ls "${fixups_dir}" | wc -l) CIX fixup patches to debian/patches/series"
+    fi
+}
+
+regenerate_control() {
+    echo "Regenerating debian/control via gencontrol.py"
+
+    # gencontrol.py reads debian/build/version-info for the package version.
+    # The md5sum of this file is tracked in debian/control.md5sum, so the
+    # content must match exactly.
+    mkdir -p "${src_tree}/debian/build"
+    cat > "${src_tree}/debian/build/version-info" <<EOF
+Source: ${package_name}
+Version: ${full_version}
+Distribution: ${distribution}
+EOF
+
+    # Regenerate debian/control from debian/config/defines.toml (which
+    # carries the c_compiler = 'gcc-14' override for trixie).
+    ( cd "${src_tree}" && PYTHONHASHSEED=0 debian/bin/gencontrol.py )
+
+    # debian/control-real-fail regenerates debian/control.md5sum and then
+    # exits 1 by design. The md5sum file is now correct for the current
+    # source tree (including the gcc-14 defines.toml and staged CIX patches).
+    ( cd "${src_tree}" && make -f debian/rules debian/control-real-fail ) || true
+
+    # Verify the md5sum now passes.
+    ( cd "${src_tree}" && md5sum --check debian/control.md5sum --status ) \
+        || { echo "debian/control.md5sum verification failed" >&2; exit 1; }
+
+    # gencontrol.py leaves __pycache__ directories that dpkg-source rejects.
+    find "${src_tree}/debian" -name "__pycache__" -type d -exec rm -rf {} + 2>/dev/null || true
+    echo "debian/control regenerated and verified"
 }
 
 fetch_upstream_tarball
@@ -96,15 +145,16 @@ extract_upstream
 install_debian_dir
 prepare_patch_repo
 stage_cix_patches
+regenerate_control
 
 cat <<EOF
 
 Source tree prepared:
   ${src_tree}
 
-Next steps on Debian 13:
+Next steps on Debian 13 (trixie):
   cd ${src_tree}
-  dpkg-buildpackage -us -uc -b           # local build
-  # or, for clean chroot builds on radxa-32g:
-  sbuild -d trixie ../${package_name}_${upstream_version}-*.dsc
+  dpkg-source -b .
+  # then build in a clean chroot:
+  sbuild -d trixie --arch=arm64 --no-arch-all --no-source ../${package_name}_${full_version}.dsc
 EOF

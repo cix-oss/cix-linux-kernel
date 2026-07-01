@@ -1,0 +1,24 @@
+From: CIX OSS <oss@cixtech.com>
+Subject: Move use_sky1_dma_pause and timeout_value outside CONFIG_DMA_ENGINE ifdef
+
+The CIX BSP patch 0046 adds use_sky1_dma_pause and timeout_value fields to
+struct uart_amba_port inside the #ifdef CONFIG_DMA_ENGINE block, but
+references them from code outside that block. When CONFIG_DMA_ENGINE is not
+enabled (e.g. Debian arm64 cloud config), compilation fails with:
+  error: 'struct uart_amba_port' has no member named 'use_sky1_dma_pause'
+
+Move the two field definitions outside the #ifdef to fix this.
+
+--- a/drivers/tty/serial/amba-pl011.c
++++ b/drivers/tty/serial/amba-pl011.c
+@@ -321,9 +321,9 @@
+ 	struct pl011_dmarx_data dmarx;
+ 	struct pl011_dmatx_data	dmatx;
+ 	bool			dma_probed;
++#endif
+ 	bool use_sky1_dma_pause;
+ 	unsigned int timeout_value;
+-#endif
+ };
+
+ static unsigned int pl011_tx_empty(struct uart_port *port);

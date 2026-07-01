@@ -1,0 +1,24 @@
+Subject: regulator: fwnode_regulator: fix IS_ERR() called on int return value
+
+drivers/regulator/fwnode_regulator.c (introduced by the CIX patch
+0033-regulator-add-acpi-support.patch) calls IS_ERR() on the int
+return value of fwnode_count_reference_with_args(). On Debian 13
+(trixie) GCC promotes -Wint-conversion to an error and the build
+fails. The intent (made obvious by the immediately following
+max(n_phandles, 0)) is to clamp negative error returns to zero, so
+replace IS_ERR() with a `< 0` test.
+
+This is a local follow-up to 0033 pending an upstream fix in
+cixtech/cix-linux-main.
+
+--- a/drivers/regulator/fwnode_regulator.c
++++ b/drivers/regulator/fwnode_regulator.c
+@@ -93,7 +93,7 @@ int fwnode_get_regulation_constraints(struct fwnode_handle *np,
+ 
+ 	n_phandles = fwnode_count_reference_with_args(np, "regulator-coupled-with",
+ 						NULL);
+-	if (IS_ERR(n_phandles))
++	if (n_phandles < 0)
+ 		n_phandles = 0;
+ 
+ 	n_phandles = max(n_phandles, 0);

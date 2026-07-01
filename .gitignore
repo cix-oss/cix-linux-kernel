@@ -1,5 +1,10 @@
 work/
 output/
+debian/build/
+debian-pkg/compare-configs.sh
+debian-pkg/debian/control
+debian-pkg/debian/rules.gen
+debian-pkg/debian/generated.signed-*/rules.gen
 *.tar.xz
 *.tar.gz
 *.deb
@@ -7,3 +12,5 @@ output/
 *.buildinfo
 *.changes
 QWEN.md
+debian-pkg/debian/control.md5sum
+debian-pkg/debian/generated.signed-*/
