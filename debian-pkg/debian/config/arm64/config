@@ -1745,7 +1745,7 @@ CONFIG_PCIE_XILINX_NWL=y
 ##
 ## file: drivers/pci/controller/cadence/Kconfig
 ##
-CONFIG_PCI_SKY1_HOST=y
+# CONFIG_PCI_SKY1_HOST is not set
 CONFIG_PCI_J721E_HOST=y
 CONFIG_PCI_J721E_EP=y
 
